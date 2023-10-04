@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Steamworks.Data;
@@ -205,32 +202,29 @@ namespace Steamworks
 		}
 
 		/// <summary>
-        /// Creates a list of all item's that the user is currently subscribed
-        /// to for this App. This does not query titles or descriptions but
-        /// allows you to get the directories, state and ID of any subscribed Item.
-        /// This is mostly useful for getting all subscribed items' install locations,
+		/// Creates a list of all item's that the user is currently subscribed
+		/// to for this App. This does not query titles or descriptions but
+		/// allows you to get the directories, state and ID of any subscribed Item.
+		/// This is mostly useful for getting all subscribed items' install locations,
 		/// and does not require a query.
-        /// </summary>
-        public unsafe Item[] GetSubscribedItems()
+		/// </summary>
+		public static Ugc.Item[] GetSubscribedItems()
 		{
-			Item[] items;
-			uint subAmount;
-			var amount = ugc.GetNumSubscribedItems();
-            PublishedFileId_t[] vecSubscribedItems = new PublishedFileId_t[amount];
-			
-			fixed (PublishedFileId_t* vecSubscribedItems_ptr = vecSubscribedItems)
-            {
-                subAmount = ugc.GetSubscribedItems(vecSubscribedItems_ptr, amount);
-            }
+			uint itemCount = Internal.GetNumSubscribedItems();
+			if (itemCount <= 0)
+			{
+				return new Ugc.Item[0];
+			}
 
-            items = new Item[Math.Min (subAmount, amount)];
+			var fileIds = new PublishedFileId[itemCount];
+			uint realCount = Internal.GetSubscribedItems(fileIds, itemCount);
 
-            for(int i = 0, length = items.Length; i < length; i++)
-            {
-                items[i] = new Item(vecSubscribedItems[i].Value, this);
-            }
-
-            return items;
+			var items = new Ugc.Item[realCount];
+			for (uint i = 0; i < realCount; i++)
+			{
+				items[i] = new Ugc.Item(fileIds[i]);
+			}
+			return items;
 		}
 	}
 }
