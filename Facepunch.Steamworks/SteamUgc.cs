@@ -26,7 +26,7 @@ namespace Steamworks
 
 		internal static void InstallEvents( bool server )
 		{
-			Dispatch.Install<DownloadItemResult_t>( x => OnDownloadItemResult?.Invoke( x.Result ), server );
+			Dispatch.Install<DownloadItemResult_t>( x => OnDownloadItemResult?.Invoke( x.Result, x.AppID, x.PublishedFileId ), server );
 			Dispatch.Install<RemoteStoragePublishedFileSubscribed_t>( x => OnItemSubscribed?.Invoke( x.AppID.Value, x.PublishedFileId ), server );
 			Dispatch.Install<RemoteStoragePublishedFileUnsubscribed_t>( x => OnItemUnsubscribed?.Invoke( x.AppID.Value, x.PublishedFileId ), server );
 			Dispatch.Install<ItemInstalled_t>( x => OnItemInstalled?.Invoke( x.AppID.Value, x.PublishedFileId ), server );
@@ -35,7 +35,7 @@ namespace Steamworks
 		/// <summary>
 		/// Invoked after an item is downloaded.
 		/// </summary>
-		public static event Action<Result> OnDownloadItemResult;
+		public static event Action<Result, AppId, PublishedFileId> OnDownloadItemResult;
 		
 		/// <summary>
 		/// Invoked when a new item is subscribed.
@@ -88,13 +88,13 @@ namespace Steamworks
 
 			// Wait for DownloadItemResult_t
 			{
-				Action<Result> onDownloadStarted = null;
+				Action<Result, AppId, PublishedFileId> onDownloadStarted = null;
 
 				try
 				{
 					var downloadStarted = false;
 					
-					onDownloadStarted = r => downloadStarted = true;
+					onDownloadStarted = (r, a, f) => downloadStarted = true;
 					OnDownloadItemResult += onDownloadStarted;
 
 					while ( downloadStarted == false )
